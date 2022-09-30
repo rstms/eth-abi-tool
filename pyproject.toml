@@ -21,7 +21,11 @@ classifiers = [
 dynamic = ["version", "description"] 
 
 dependencies = [
-  "click"
+  "click",
+  "eth-utils",
+  "python-box",
+  "requests",
+  "tablib"
 ]
 
 [tool.flit.module]
@@ -59,4 +63,4 @@ collect_ignore = ['setup.py']
 
 
 [project.scripts]
-eth-abi-tool = "eth_abi_tool:cli"
+abi = "eth_abi_tool:cli"
