@@ -8,7 +8,6 @@ import click
 import requests
 import tablib
 from box import Box
-import eth_utils
 
 from .exception_handler import ExceptionHandler
 from .version import __timestamp__, __version__
@@ -99,10 +98,11 @@ def contract(ctx):
 @click.pass_context
 def add(ctx, name, address):
     """add contract name and address"""
-    if not eth-utils.is_address(address):
+    from eth_utils import is_address
+    if not is_address(address):
         raise ValueError(f"{address=}")
     ctx.config.setdefault("contracts", {})
-    ctx.config.contracts[name] = eth_utils.to_normalized_address(address)
+    ctx.config.contracts[name] = address
     config_write(ctx)
 
 
@@ -120,10 +120,11 @@ def delete(ctx, name):
 @click.pass_context
 def list(ctx):
     """list configured contract addresses"""
+    from eth_utils import to_normalized_address
     contracts = ctx.obj.config.contracts
     data = tablib.Dataset()
     for name, address in contracts.items():
-        data.append([name, address])
+        data.append([name, to_normalized_address(address)])
     data.headers = ["Name", "Address"]
     click.echo(data.export("cli"))
 
