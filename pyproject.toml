@@ -37,6 +37,7 @@ dev = [
   "flake8-length",
   "pytest",
   "python-box",
+  "toml",
   "tox"
 ]
 docs = [
