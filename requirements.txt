@@ -1,5 +1,6 @@
 click
+eth-hash[pycryptodome]
 eth-utils
 python-box
 requests
-tablib
+tablib[cli,yaml]
