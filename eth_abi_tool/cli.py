@@ -1,5 +1,6 @@
 """Console script for eth_abi_tool."""
 
+
 import json
 import sys
 from pathlib import Path
@@ -7,6 +8,7 @@ from pathlib import Path
 import click
 import requests
 import tablib
+import tabulate
 from box import Box
 
 from .exception_handler import ExceptionHandler
@@ -24,17 +26,46 @@ CHAINS = {
     "sepolia": {"Etherscan": "https://api-sepolia.etherscan.io"},
 }
 
+OUTPUT_FORMATS = ["json", "yaml", "csv", "cli", "text"]
+DEFAULT_FMT = "json"
+TABLE_FORMATS = tabulate._table_formats
+DEFAULT_TABLEFMT = "pretty"
+
 
 def config_read(ctx):
     if ctx.obj.config_file.is_file():
         ctx.obj.config = Box(json.loads(ctx.obj.config_file.read_text()))
     else:
         ctx.obj.config = Box({})
+    ctx.obj.config.setdefault("contracts", {})
+    ctx.obj.config.setdefault("format", {})
     return ctx.obj.config
 
 
 def config_write(ctx):
     ctx.obj.config_file.write_text(json.dumps(dict(ctx.obj.config), indent=2))
+
+
+def get_default_format(ctx, key):
+    return ctx.obj.config.format.get(key, DEFAULT_FMT)
+
+
+def get_format(ctx, key):
+    return ctx.obj.get(key) or get_default_format(ctx, key)
+
+
+def output_table(ctx, data):
+    fmt = get_format(ctx, "fmt")
+    if fmt in ["cli", "text"]:
+        tablefmt = get_format(ctx, "tablefmt")
+        output = data.export("cli", tablefmt=tablefmt)
+    elif fmt == "json":
+        output = data.export(fmt)
+        if not ctx.obj.compact:
+            output = json.dumps(json.loads(output), indent=2)
+    else:
+        raise ValueError(f"unexpected {fmt=}")
+    click.echo(output)
 
 
 @click.group("abi")
@@ -49,7 +80,7 @@ def config_write(ctx):
     help="Explorer API Key",
 )
 @click.option(
-    "-c",
+    "-C",
     "--chain",
     type=click.Choice(list(CHAINS.keys())),
     envvar="EXPLORER_CHAIN",
@@ -65,11 +96,32 @@ def config_write(ctx):
     help="Blockchain Explorer Name",
 )
 @click.option(
-    "-f",
+    "-c",
     "--config-file",
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     default=Path.home() / ".eth-abi-tool",
     help="config file",
+)
+@click.option(
+    "-f",
+    "--fmt",
+    type=click.Choice(OUTPUT_FORMATS),
+    default=None,
+    help="output format",
+)
+@click.option(
+    "-T",
+    "--tablefmt",
+    type=click.Choice(TABLE_FORMATS),
+    default=None,
+    help="text table output format",
+)
+@click.option(
+    "-J/-j",
+    "--compact/--no-compact",
+    is_flag=True,
+    default=None,
+    help="compact json format",
 )
 @click.pass_context
 def cli(ctx, **kwargs):
@@ -77,6 +129,10 @@ def cli(ctx, **kwargs):
     ctx.obj = Box(kwargs)
     ctx.obj.ehandler = ExceptionHandler(ctx.obj.debug)
     ctx.obj.url = CHAINS[ctx.obj.chain][ctx.obj.explorer]
+    if ctx.obj.compact is not None:
+        ctx.obj.fmt = "json"
+    if ctx.obj.fmt == "text":
+        ctx.obj.fmt = "cli"
     config_read(ctx)
 
 
@@ -84,67 +140,227 @@ def cli(ctx, **kwargs):
 @click.pass_context
 def config(ctx):
     """config commands"""
+    pass
+
+
+@config.group
+@click.pass_context
+def format(ctx):
+    """output format config"""
+    pass
+
+
+@format.command(name="reset")
+@click.pass_context
+def config_format_reset(ctx):
+    """reset default output format"""
+    ctx.obj.config.format.fmt = DEFAULT_FMT
+    ctx.obj.config.format.tablefmt = DEFAULT_TABLEFMT
+    config_write(ctx)
+
+
+@format.command(name="set")
+@click.pass_context
+def config_format_set(ctx):
+    """set current output format selections as default"""
+    ctx.obj.config.format.fmt = ctx.obj.fmt or DEFAULT_FMT
+    ctx.obj.config.format.tablefmt = ctx.obj.tablefmt or DEFAULT_TABLEFMT
+    config_write(ctx)
+
+
+@format.command(name="show")
+@click.pass_context
+def config_format_show(ctx):
+    """display output format default settings"""
+    data = tablib.Dataset()
+    data.append(("fmt", get_default_format(ctx, "fmt")))
+    data.append(("tablefmt", get_default_format(ctx, "tablefmt")))
+    data.headers = ["setting", "value"]
+    ctx.obj.fmt = "cli"
+    ctx.obj.tablefmt = "pretty"
+    output_table(ctx, data)
 
 
 @config.group
 @click.pass_context
 def contract(ctx):
-    """config contract commands"""
+    """contract config"""
+    pass
 
 
-@contract.command
+@contract.command(name="add")
 @click.argument("name", type=str)
 @click.argument("address", type=str)
 @click.pass_context
-def add(ctx, name, address):
+def config_contract_add(ctx, name, address):
     """add contract name and address"""
     from eth_utils import is_address
+
     if not is_address(address):
         raise ValueError(f"{address=}")
-    ctx.config.setdefault("contracts", {})
-    ctx.config.contracts[name] = address
+    ctx.obj.config.contracts[name] = address
     config_write(ctx)
 
 
-@contract.command
+@contract.command(name="delete")
 @click.argument("name", type=str)
 @click.pass_context
-def delete(ctx, name):
+def config_contract_delete(ctx, name):
     """delete named contract"""
-    ctx.config.setdefault("contracts", {})
-    del ctx.config.contracts[name]
+    del ctx.obj.config.contracts[name]
     config_write(ctx)
 
 
-@contract.command
+@contract.command(name="list")
 @click.pass_context
-def list(ctx):
+def config_contract_list(ctx):
     """list configured contract addresses"""
     from eth_utils import to_normalized_address
+
     contracts = ctx.obj.config.contracts
     data = tablib.Dataset()
     for name, address in contracts.items():
         data.append([name, to_normalized_address(address)])
     data.headers = ["Name", "Address"]
-    click.echo(data.export("cli"))
+    output_table(ctx, data)
 
 
 @cli.command
+@click.option("-f", "--functions", is_flag=True, help="select only functions")
+@click.option("-e", "--events", is_flag=True, help="select only events")
+@click.option("-h", "--header", is_flag=True, help="select header output")
+@click.option("-n", "--name", is_flag=True, help="switch name output")
+@click.option("-a", "--abi", is_flag=True, help="select abi output")
+@click.option("-t", "--topic", is_flag=True, help="select topic0 hex output")
+@click.option("-c", "--complete", is_flag=True, help="output complete ABI")
+@click.argument("contract", type=str)
+@click.argument("abi-name", type=str, required=False)
 @click.pass_context
-def get(ctx, contract_address):
+def get(
+    ctx,
+    functions,
+    events,
+    header,
+    name,
+    abi,
+    topic,
+    complete,
+    contract,
+    abi_name,
+):
     """query block explorer and output contract ABI as json"""
+    from eth_utils import is_address
+
+    if not any([functions, events, header, name, abi, topic]):
+        complete = True
+
+    if contract in ctx.obj.config.contracts.keys():
+        contract = ctx.obj.config.contracts[contract]
+    elif not is_address(contract):
+        raise ValueError(f"{contract=}")
+
     params = dict(
         module="contract",
         action="getabi",
-        address=contract_address,
+        address=contract,
         apikey=ctx.obj.key,
     )
     url = f"{ctx.obj.url}/api"
     response = requests.get(url, params=params)
-    if not response.ok:
+    if not response:
         response.raise_for_status()
     result = response.json()
-    click.echo(json.dumps(result, indent=2))
+    if result["status"] != "1" or result["message"] != "OK":
+        raise RuntimeError(f"API failed: {result}")
+    else:
+        result = json.loads(result["result"])
+
+    if complete:
+        if ctx.obj.compact:
+            indent = None
+        else:
+            indent = 2
+        click.echo(json.dumps(result, indent=indent))
+    else:
+        if functions:
+            abi_type = "function"
+        elif events:
+            abi_type = "event"
+        else:
+            abi_type = None
+        output_abi(ctx, result, abi_type, header, name, abi, topic, abi_name)
+
+
+def output_abi(
+    ctx,
+    contract_abi,
+    abi_type,
+    enable_header,
+    enable_name,
+    enable_abi,
+    enable_topic,
+    name=None,
+):
+    """format abi output
+
+    ctx.obj.header: ------- bool include header
+    contract_abi: --------- list of abi elements
+    abi_type: ------------- None / 'function' / 'event'
+    enable_header: bool --- include header in output
+    enable_name: bool ----- include name in output
+    enable_abi: bool ------ include abi in output
+    enable_topic: bool ---- include hex topic0 in output
+    name: str ------------- include only matching rows if not None
+
+    """
+
+    data = tablib.Dataset()
+    for abi in [Box(a) for a in contract_abi]:
+        # skip rows with no name
+        if "name" not in abi:
+            continue
+        # if name specified, skip non-matching rows
+        if name is not None and abi.name != name:
+            continue
+
+        # if abi_type specified, skip non-matching rows
+        if abi_type is not None and abi.type != abi_type:
+            continue
+
+        row = []
+        header = []
+
+        if enable_name:
+            header.append("name")
+            row.append(abi.name)
+        if enable_abi:
+            header.append("abi")
+            row.append(abi.to_dict())
+            # if ctx.obj.get('fmt') == 'json':
+            #    row.append(abi.to_dict())
+            # else
+            #    row.append(compressed_json(abi))
+        if abi.type == "event" and enable_topic:
+            header.append("topic")
+            row.append(generate_topic(abi))
+        if row is not None and len(row) > 0:
+            data.append(tuple(row))
+        if len(header) > 0 and enable_header:
+            data.headers = header
+    output_table(ctx, data)
+
+
+def generate_topic(abi):
+    """generate hex topic0 event signature"""
+    from eth_utils import event_abi_to_log_topic, to_hex
+
+    topic = event_abi_to_log_topic(abi)
+    ret = to_hex(topic)
+    return ret
+
+
+def compressed_json(abi):
+    return json.dumps(abi.to_dict(), separators=[":", ","])
 
 
 if __name__ == "__main__":

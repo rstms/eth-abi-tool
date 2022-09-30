@@ -31,7 +31,9 @@ def run():
         # kwargs["env"] = env
         result = runner.invoke(cli, cmd, **kwargs)
         if result.exception:
-            if not isinstance(result.exception, expect_exception):
+            if expect_exception is None or not isinstance(
+                result.exception, expect_exception
+            ):
                 print_exception(result.exception)
                 breakpoint()
                 pass
@@ -42,12 +44,51 @@ def run():
     return _run
 
 
-def test_cli(run):
-    """Test the CLI."""
+def test_cli_none(run):
     result = run([], expect_exception=RuntimeError)
-    assert "eth_abi_tool/cli.py" in str(result.exception)
+    assert "Usage" in result.output
 
 
-def test_help(run):
+def test_cli_help(run):
     result = run(["--help"])
     assert "Show this message and exit." in result.output
+
+
+def test_cli_config_format_show(run):
+    result = run(["config", "format", "show"])
+    assert len(result.output)
+
+
+def test_cli_config_format_set_none(run):
+    result = run(["config", "format", "set"])
+    assert result.exit_code == 0
+
+
+def test_cli_config_format_set_fmt(run):
+    result = run(["--fmt", "text", "config", "format", "set"])
+    assert result.exit_code == 0
+
+
+def test_cli_config_format_set_tablefmt(run):
+    result = run(["--tablefmt", "plain", "config", "format", "set"])
+    assert result.exit_code == 0
+
+
+def test_cli_config_format_set_both(run):
+    result = run(
+        [
+            "--fmt",
+            "text",
+            "--tablefmt",
+            "fancy_grid",
+            "config",
+            "format",
+            "set",
+        ]
+    )
+    assert result.exit_code == 0
+
+
+def test_cli_config_format_reset(run):
+    result = run(["config", "format", "reset"])
+    assert result.exit_code == 0

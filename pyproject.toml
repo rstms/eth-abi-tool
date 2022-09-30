@@ -22,10 +22,11 @@ dynamic = ["version", "description"]
 
 dependencies = [
   "click",
+  "eth-hash[pycryptodome]",
   "eth-utils",
   "python-box",
   "requests",
-  "tablib"
+  "tablib[cli,yaml]"
 ]
 
 [tool.flit.module]
