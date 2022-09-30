@@ -254,6 +254,12 @@ def get(
     if not any([functions, events, header, name, abi, topic]):
         complete = True
 
+    if functions and not any([events, header, name, abi, topic]):
+        name = True
+
+    if events and not any([functions, header, name, abi, topic]):
+        name = True
+
     if contract in ctx.obj.config.contracts.keys():
         contract = ctx.obj.config.contracts[contract]
     elif not is_address(contract):
