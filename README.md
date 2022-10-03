@@ -6,7 +6,6 @@ Ethereum Contract ABI Utility
 
 ![Image](https://img.shields.io/pypi/v/eth-abi-tool.svg)
 
-
 ![Image](https://circleci.com/gh/rstms/eth-abi-tool/tree/master.svg?style=shield)
 
 ![Image](https://readthedocs.org/projects/eth-abi-tool/badge/?version=latest)

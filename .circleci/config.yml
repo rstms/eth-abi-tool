@@ -20,6 +20,7 @@ jobs:
             python -m venv venv
             . venv/bin/activate
             pip install --upgrade pip setuptools wheel
+            export PROJECT_DIR=$(pwd)
             make dev
             pip install --upgrade tox-pyenv
       - run:
