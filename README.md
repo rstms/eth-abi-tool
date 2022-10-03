@@ -2,16 +2,16 @@
 
 Ethereum Contract ABI Utility
 
-![Image](https://img.shields.io/github/license/rstms/eth_abi_tool)
+![Image](https://img.shields.io/github/license/rstms/eth-abi-tool)
 
-![Image](https://img.shields.io/pypi/v/eth_abi_tool.svg)
+![Image](https://img.shields.io/pypi/v/eth-abi-tool.svg)
 
 
-![Image](https://circleci.com/gh/rstms/eth_abi_tool/tree/master.svg?style=shield)
+![Image](https://circleci.com/gh/rstms/eth-abi-tool/tree/master.svg?style=shield)
 
 ![Image](https://readthedocs.org/projects/eth-abi-tool/badge/?version=latest)
 
-![Image](https://pyup.io/repos/github/rstms/eth_abi_tool/shield.svg)
+![Image](https://pyup.io/repos/github/rstms/eth-abi-tool/shield.svg)
 
 
 Use blockchain explorer API (currently only etherscan) to query ABI data for a verified contract.
