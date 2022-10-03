@@ -56,6 +56,7 @@ def test_abi_topic_by_name(abi, test_event_name, expected_topic):
     topic = abi.topic(name=test_event_name)
     assert topic == expected_topic
 
+
 def test_abi_topic_by_event_abi(abi, test_event_name, expected_topic):
     event_abi = abi.event(test_event_name)
     topic = ABI().topic(event=event_abi)

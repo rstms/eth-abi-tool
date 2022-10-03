@@ -22,9 +22,11 @@ def address():
 def test_event_name():
     return "RoleGranted"
 
+
 @pytest.fixture
 def expected_topic():
     return "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d"
+
 
 @pytest.fixture
 def expected_functions():

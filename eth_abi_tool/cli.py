@@ -221,7 +221,13 @@ def config_contract_list(ctx):
 @cli.command
 @click.option("-f", "--functions", is_flag=True, help="select only functions")
 @click.option("-e", "--events", is_flag=True, help="select only events")
-@click.option("-h/-H", "--header/--no-header", is_flag=True, default=True, help="select header output")
+@click.option(
+    "-h/-H",
+    "--header/--no-header",
+    is_flag=True,
+    default=True,
+    help="select header output",
+)
 @click.option("-n", "--name", is_flag=True, help="switch name output")
 @click.option("-a", "--abi", is_flag=True, help="select abi output")
 @click.option("-t", "--topic", is_flag=True, help="select topic0 hex output")
@@ -330,7 +336,7 @@ def output_abi(
             if abi.type == "event":
                 topic = ABI().topic(event=abi)
             else:
-                topic = ''
+                topic = ""
             row.append(topic)
 
         if row is not None and len(row) > 0:
