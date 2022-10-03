@@ -2,13 +2,16 @@
 
 import pytest
 
+
 @pytest.fixture
 def explorer():
     return "etherscan"
 
+
 @pytest.fixture
 def chain():
     return "goerli"
+
 
 @pytest.fixture
 def address():
