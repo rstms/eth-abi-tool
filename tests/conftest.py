@@ -5,7 +5,7 @@ import pytest
 
 @pytest.fixture
 def explorer():
-    return "etherscan"
+    return "Etherscan"
 
 
 @pytest.fixture

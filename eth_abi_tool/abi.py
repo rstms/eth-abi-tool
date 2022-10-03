@@ -28,7 +28,7 @@ class ABIError(ABIException):
 class ABI:
 
     EXPLORERS = {
-        "etherscan": {
+        "Etherscan": {
             "mainnet": {"url": "https://api.etherscan.io/api"},
             "kovan": {"url": "https://api-kovan.etherscan.io/api"},
             "goerli": {"url": "https://api-goerli.etherscan.io/api"},
