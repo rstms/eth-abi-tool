@@ -2,5 +2,6 @@ click
 eth-hash[pycryptodome]
 eth-utils
 python-box
+ratelimiter
 requests
 tablib[cli,yaml]
