@@ -6,30 +6,23 @@ import sys
 from pathlib import Path
 
 import click
-import requests
 import tablib
 import tabulate
 from box import Box
 
+from .abi import ABI
 from .exception_handler import ExceptionHandler
 from .version import __timestamp__, __version__
 
 header = f"{__name__.split('.')[0]} v{__version__} {__timestamp__}"
 
-EXPLORER_NAMES = ["Etherscan"]
-CHAINS = {
-    "mainnet": {"Etherscan": "https://api.etherscan.io"},
-    "kovan": {"Etherscan": "https://api-kovan.etherscan.io"},
-    "goerli": {"Etherscan": "https://api-goerli.etherscan.io"},
-    "rinkeby": {"Etherscan": "https://api-rinkeby.etherscan.io"},
-    "ropsten": {"Etherscan": "https://api-ropsten.etherscan.io"},
-    "sepolia": {"Etherscan": "https://api-sepolia.etherscan.io"},
-}
-
 OUTPUT_FORMATS = ["json", "yaml", "csv", "cli", "text"]
 DEFAULT_FMT = "json"
 TABLE_FORMATS = tabulate._table_formats
 DEFAULT_TABLEFMT = "pretty"
+
+EXPLORERS = list(ABI.EXPLORERS.keys())
+CHAINS = list(ABI.EXPLORERS[EXPLORERS[0]].keys())
 
 
 def config_read(ctx):
@@ -82,7 +75,7 @@ def output_table(ctx, data):
 @click.option(
     "-C",
     "--chain",
-    type=click.Choice(list(CHAINS.keys())),
+    type=click.Choice(CHAINS),
     envvar="EXPLORER_CHAIN",
     show_envvar=True,
     help="Chain Name",
@@ -90,7 +83,7 @@ def output_table(ctx, data):
 @click.option(
     "-e",
     "--explorer",
-    type=click.Choice(EXPLORER_NAMES),
+    type=click.Choice(EXPLORERS),
     envvar="EXPLORER_GATEWAY",
     show_envvar=True,
     help="Blockchain Explorer Name",
@@ -128,7 +121,7 @@ def cli(ctx, **kwargs):
     """Ethereum Contract ABI Utility"""
     ctx.obj = Box(kwargs)
     ctx.obj.ehandler = ExceptionHandler(ctx.obj.debug)
-    ctx.obj.url = CHAINS[ctx.obj.chain][ctx.obj.explorer]
+    ctx.obj.abi = ABI(ctx.obj.explorer, ctx.obj.chain, ctx.obj.key)
     if ctx.obj.compact is not None:
         ctx.obj.fmt = "json"
     if ctx.obj.fmt == "text":
@@ -265,21 +258,7 @@ def get(
     elif not is_address(contract):
         raise ValueError(f"{contract=}")
 
-    params = dict(
-        module="contract",
-        action="getabi",
-        address=contract,
-        apikey=ctx.obj.key,
-    )
-    url = f"{ctx.obj.url}/api"
-    response = requests.get(url, params=params)
-    if not response:
-        response.raise_for_status()
-    result = response.json()
-    if result["status"] != "1" or result["message"] != "OK":
-        raise RuntimeError(f"API failed: {result}")
-    else:
-        result = json.loads(result["result"])
+    result = ctx.obj.abi.get(contract)
 
     if complete:
         if ctx.obj.compact:

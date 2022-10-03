@@ -2,6 +2,7 @@
 
 """Tests for `eth_abi_tool` CLI"""
 
+import json
 from traceback import print_exception
 
 import pytest
@@ -35,8 +36,7 @@ def run():
                 result.exception, expect_exception
             ):
                 print_exception(result.exception)
-                breakpoint()
-                pass
+                assert False, result.exception
         else:
             assert result.exit_code == expect_exit_code, result.output
         return result
@@ -92,3 +92,11 @@ def test_cli_config_format_set_both(run):
 def test_cli_config_format_reset(run):
     result = run(["config", "format", "reset"])
     assert result.exit_code == 0
+
+
+def test_cli_get_abi(run, address):
+    result = run(["get", address])
+    abi = json.loads(result.output)
+    assert isinstance(abi, list)
+    for a in abi:
+        assert isinstance(a, dict)
