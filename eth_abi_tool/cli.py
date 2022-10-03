@@ -221,7 +221,7 @@ def config_contract_list(ctx):
 @cli.command
 @click.option("-f", "--functions", is_flag=True, help="select only functions")
 @click.option("-e", "--events", is_flag=True, help="select only events")
-@click.option("-h", "--header", is_flag=True, help="select header output")
+@click.option("-h/-H", "--header/--no-header", is_flag=True, default=True, help="select header output")
 @click.option("-n", "--name", is_flag=True, help="switch name output")
 @click.option("-a", "--abi", is_flag=True, help="select abi output")
 @click.option("-t", "--topic", is_flag=True, help="select topic0 hex output")
@@ -325,23 +325,20 @@ def output_abi(
             #    row.append(abi.to_dict())
             # else
             #    row.append(compressed_json(abi))
-        if abi.type == "event" and enable_topic:
+        if enable_topic:
             header.append("topic")
-            row.append(generate_topic(abi))
+            if abi.type == "event":
+                topic = ABI().topic(event=abi)
+            else:
+                topic = ''
+            row.append(topic)
+
         if row is not None and len(row) > 0:
             data.append(tuple(row))
+
         if len(header) > 0 and enable_header:
             data.headers = header
     output_table(ctx, data)
-
-
-def generate_topic(abi):
-    """generate hex topic0 event signature"""
-    from eth_utils import event_abi_to_log_topic, to_hex
-
-    topic = event_abi_to_log_topic(abi)
-    ret = to_hex(topic)
-    return ret
 
 
 def compressed_json(abi):
