@@ -17,12 +17,11 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
+            mkdir eth-abi-tool
+            mv * eth-abi-tool
             python -m venv venv
             . venv/bin/activate
             pip install --upgrade pip setuptools wheel
-            export PROJECT_DIR=$(pwd)
-            pwd
-            ls -al
             make dev
             pip install --upgrade tox-pyenv
       - run:
