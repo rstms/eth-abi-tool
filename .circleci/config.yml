@@ -13,7 +13,9 @@ jobs:
     docker:
       - image: rstms/python-hydra:1.0.2
     steps:
-      - checkout: eth-abi-tools   
+      - checkout:
+          path: "eth-abi-tool"
+
       - run:
           name: Install Dependencies
           command: |
