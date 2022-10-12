@@ -5,32 +5,26 @@ eth-abi-tool
 Ethereum Contract ABI Utility
 
 
-.. image:: https://img.shields.io/github/license/rstms/eth_abi_tool
-   :target: https://img.shields.io/github/license/rstms/eth_abi_tool
+.. image:: https://img.shields.io/github/license/rstms/eth-abi-tool
+   :target: https://img.shields.io/github/license/rstms/eth-abi-tool
    :alt: Image
 
 
 
-.. image:: https://img.shields.io/pypi/v/eth_abi_tool.svg
-   :target: https://img.shields.io/pypi/v/eth_abi_tool.svg
+.. image:: https://img.shields.io/pypi/v/eth-abi-tool.svg
+   :target: https://img.shields.io/pypi/v/eth-abi-tool.svg
    :alt: Image
 
 
 
-.. image:: https://circleci.com/gh/rstms/eth_abi_tool/tree/master.svg?style=shield
-   :target: https://circleci.com/gh/rstms/eth_abi_tool/tree/master.svg?style=shield
+.. image:: https://circleci.com/gh/rstms/eth-abi-tool/tree/master.svg?style=shield
+   :target: https://circleci.com/gh/rstms/eth-abi-tool/tree/master.svg?style=shield
    :alt: Image
 
 
 
 .. image:: https://readthedocs.org/projects/eth-abi-tool/badge/?version=latest
    :target: https://readthedocs.org/projects/eth-abi-tool/badge/?version=latest
-   :alt: Image
-
-
-
-.. image:: https://pyup.io/repos/github/rstms/eth_abi_tool/shield.svg
-   :target: https://pyup.io/repos/github/rstms/eth_abi_tool/shield.svg
    :alt: Image
 
 
